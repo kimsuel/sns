@@ -8,10 +8,15 @@ from api.features.views import PostViewSet, CommentViewSet, LikeViewSet, FollowV
 router = DefaultRouter(trailing_slash=False)
 router.register('posts', PostViewSet)
 router.register('comments', CommentViewSet)
-router.register('likes', LikeViewSet)
-router.register('follows', FollowViewSet)
-router.register('bookmark', BookmarkViewSet)
 
 urlpatterns = [
-    path('posts/<user>', PostViewSet.as_view({'get': 'user_posts'})),
+    path('posts/user/<user_id>', PostViewSet.as_view({'get': 'user_posts'})),
+    path('comments/post/<post_id>', CommentViewSet.as_view({'get': 'post_comments'})),
+    path('likes', LikeViewSet.as_view({'post': 'create'})),
+    path('likes/<pk>', LikeViewSet.as_view({'delete': 'destroy'})),
+    path('bookmarks', BookmarkViewSet.as_view({'post': 'create'})),
+    path('bookmarks/user/<user_id>', BookmarkViewSet.as_view({'get': 'user_bookmarks', 'delete': 'destroy'})),
+    path('follows', FollowViewSet.as_view({'post': 'create'})),
+    path('follows/follower/<follower_id>', FollowViewSet.as_view({'get': 'followers', 'delete': 'destroy'})),
+    path('follows/following/<following_id>', FollowViewSet.as_view({'get': 'followings', 'delete': 'destroy'})),
 ] + router.urls + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
