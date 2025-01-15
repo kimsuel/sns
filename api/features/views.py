@@ -12,34 +12,38 @@ from api.features.serializers import (
     BookmarkReadSerializer,
     FollowerSerializer,
     FollowingSerializer,
+    SimpleBookmarkSerializer,
 )
-
 from common.viewsets import MappingViewSetMixin
 
 
 class PostViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
-    queryset = Post.objects.all()
+    queryset = Post.objects.prefetch_related('images')
     serializer_class = PostSerializer
     serializer_action_classes = {
         'list': PostReadSerializer,
         'retrieve': PostReadSerializer,
-        'user_posts': PostReadSerializer
+        'timeline_posts': PostReadSerializer,
+        'feed_posts': PostReadSerializer
     }
 
-    def user_posts(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(user=self.kwargs['user_id'])
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def timeline_posts(self, request, *args, **kwargs):
+        queryset = self.get_queryset().filter(user=self.request.user)
+        return self.handle_paginated_response(queryset)
+
+    def feed_posts(self, request, *args, **kwargs):
+        following_users = Follow.objects.filter(follower=self.request.user).values_list('following', flat=True)
+        queryset = self.get_queryset().filter(user__in=following_users)
+        return self.handle_paginated_response(queryset)
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
     def post_comments(self, request, *args, **kwargs):
         queryset = self.get_queryset().filter(post=self.kwargs['post_id'])
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return self.handle_paginated_response(queryset)
 
 
 class LikeViewSet(viewsets.ModelViewSet):
@@ -57,28 +61,20 @@ class FollowViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
 
     def followers(self, request, *args, **kwargs):
         queryset = self.get_queryset().filter(follower=self.kwargs['follower_id'])
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return self.handle_paginated_response(queryset)
 
     def followings(self, request, *args, **kwargs):
         queryset = self.get_queryset().filter(following=self.kwargs['following_id'])
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return self.handle_paginated_response(queryset)
 
 
 class BookmarkViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
     queryset = Bookmark.objects.all()
     serializer_class = BookmarkSerializer
     serializer_action_classes = {
-        'list': BookmarkReadSerializer,
+        'list': SimpleBookmarkSerializer,
         'retrieve': BookmarkReadSerializer,
-        'user_bookmarks': BookmarkReadSerializer
     }
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
-
-    def user_bookmarks(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(user=self.kwargs['user_id'])
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)

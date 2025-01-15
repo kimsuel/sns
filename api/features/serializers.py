@@ -8,6 +8,12 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = '__all__'
 
+    def validate(self, data):
+        user = self.context['request'].user
+        if user != self.instance.user or user != self.instance.post.user:
+            raise serializers.ValidationError('Only the author can edit and delete.')
+        return data
+
 
 class LikeReadSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')
@@ -85,6 +91,7 @@ class PostSerializer(serializers.ModelSerializer):
 class PostReadSerializer(PostSerializer):
     username = serializers.ReadOnlyField(source='user.username')
     comments = SimpleCommentSerializer(many=True)
+    images = ImageSerializer(many=True)
     likes = LikeReadSerializer(many=True)
     likes_count = serializers.SerializerMethodField()
 
@@ -103,7 +110,7 @@ class BookmarkSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class BookmarkReadSerializer(serializers.ModelSerializer):
+class SimpleBookmarkSerializer(serializers.ModelSerializer):
     post_first_image = serializers.SerializerMethodField()
 
     class Meta:
@@ -114,3 +121,11 @@ class BookmarkReadSerializer(serializers.ModelSerializer):
         image = obj.post.images.first()
         serializer = ImageSerializer(instance=image)
         return serializer.data
+
+
+class BookmarkReadSerializer(serializers.ModelSerializer):
+    post = PostReadSerializer()
+
+    class Meta:
+        model = Bookmark
+        fields = ['id', 'post']

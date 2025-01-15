@@ -10,12 +10,13 @@ router.register('posts', PostViewSet)
 router.register('comments', CommentViewSet)
 
 urlpatterns = [
-    path('posts/user/<user_id>', PostViewSet.as_view({'get': 'user_posts'})),
+    path('posts/feed', PostViewSet.as_view({'get': 'feed_posts'})),
+    path('posts/timeline', PostViewSet.as_view({'get': 'timeline_posts'})),
     path('comments/post/<post_id>', CommentViewSet.as_view({'get': 'post_comments'})),
     path('likes', LikeViewSet.as_view({'post': 'create'})),
     path('likes/<pk>', LikeViewSet.as_view({'delete': 'destroy'})),
-    path('bookmarks', BookmarkViewSet.as_view({'post': 'create'})),
-    path('bookmarks/user/<user_id>', BookmarkViewSet.as_view({'get': 'user_bookmarks', 'delete': 'destroy'})),
+    path('bookmarks', BookmarkViewSet.as_view({'get': 'list', 'post': 'create'})),
+    path('bookmarks/<pk>', BookmarkViewSet.as_view({'get': 'retrieve', 'delete': 'destroy'})),
     path('follows', FollowViewSet.as_view({'post': 'create'})),
     path('follows/follower/<follower_id>', FollowViewSet.as_view({'get': 'followers', 'delete': 'destroy'})),
     path('follows/following/<following_id>', FollowViewSet.as_view({'get': 'followings', 'delete': 'destroy'})),
