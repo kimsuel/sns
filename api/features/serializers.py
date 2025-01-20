@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from api.features.models import Post, Image, Comment, Like, Follow, Bookmark
+from api.features.tasks import update_post_cache
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -63,7 +64,6 @@ class SimpleCommentSerializer(serializers.ModelSerializer):
 
 
 class ImageSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Image
         fields = ['id', 'image']
@@ -75,16 +75,20 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['text', 'user', 'images']
+        read_only_fields = ['user']
 
     def create(self, validated_data):
-        user = validated_data.get('user')
+        user = self.context['request'].user
         images = validated_data.pop('images', [])
+        validated_data['user'] = user
         post = Post.objects.create(**validated_data)
 
         for image in images:
             img_instance = Image.objects.create(image=image, user=user)
             post.images.add(img_instance)
 
+        # celery 호출
+        update_post_cache.delay(user_id=user.id)
         return post
 
 
@@ -104,7 +108,6 @@ class PostReadSerializer(PostSerializer):
 
 
 class BookmarkSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Bookmark
         fields = '__all__'

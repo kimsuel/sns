@@ -1,3 +1,5 @@
+from django.core import serializers
+from django.core.cache import cache
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
@@ -24,16 +26,26 @@ class PostViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
         'list': PostReadSerializer,
         'retrieve': PostReadSerializer,
         'timeline_posts': PostReadSerializer,
-        'feed_posts': PostReadSerializer
+        'newsfeed_posts': PostReadSerializer
     }
 
     def timeline_posts(self, request, *args, **kwargs):
         queryset = self.get_queryset().filter(user=self.request.user)
         return self.handle_paginated_response(queryset)
 
-    def feed_posts(self, request, *args, **kwargs):
-        following_users = Follow.objects.filter(follower=self.request.user).values_list('following', flat=True)
-        queryset = self.get_queryset().filter(user__in=following_users)
+    def newsfeed_posts(self, request, *args, **kwargs):
+        following_users = cache.get(f'following_user_{self.request.user.pk}')
+        if not following_users:
+            following_users = list(Follow.objects.filter(follower=self.request.user
+                                                         ).values_list('following', flat=True))
+            cache.set(f'following_user_{self.request.user.pk}', following_users)
+
+        newsfeed_ids = cache.get(f'newsfeeds_{self.request.user.pk}')
+        if not newsfeed_ids:
+            newsfeed_ids = list(self.get_queryset().filter(user__in=following_users).values_list('id', flat=True))
+            cache.set(f'newsfeeds_{self.request.user.pk}', newsfeed_ids)
+
+        queryset = self.get_queryset().filter(id__in=newsfeed_ids).order_by('-created_at')
         return self.handle_paginated_response(queryset)
 
 
