@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from api.features.models import Post, Image, Comment, Like, Follow, Bookmark
 from api.features.tasks import update_post_cache
+from common.config import create_presigned_url
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -77,19 +78,32 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ['text', 'user', 'images']
         read_only_fields = ['user']
 
+
+class PostCreateSerializer(serializers.ModelSerializer):
+    urls = serializers.ListSerializer(child=serializers.URLField(read_only=True), read_only=True)
+    images = serializers.ListField(child=serializers.CharField(), write_only=True)
+
+    class Meta:
+        model = Post
+        fields = ['urls', 'text', 'images']
+        write_only = ['text']
+
     def create(self, validated_data):
         user = self.context['request'].user
         images = validated_data.pop('images', [])
         validated_data['user'] = user
         post = Post.objects.create(**validated_data)
 
-        for image in images:
-            img_instance = Image.objects.create(image=image, user=user)
-            post.images.add(img_instance)
-
         # celery 호출
         update_post_cache.delay(user_id=user.id)
-        return post
+
+        urls = []
+        for image in images:
+            url = create_presigned_url(user_id=user.pk, post_id=post.id, file_name=image)
+            urls.append(url)
+
+        validated_data['urls'] = urls
+        return validated_data
 
 
 class PostReadSerializer(PostSerializer):

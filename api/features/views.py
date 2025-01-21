@@ -15,6 +15,7 @@ from api.features.serializers import (
     FollowerSerializer,
     FollowingSerializer,
     SimpleBookmarkSerializer,
+    PostCreateSerializer,
 )
 from common.viewsets import MappingViewSetMixin
 
@@ -23,6 +24,7 @@ class PostViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
     queryset = Post.objects.prefetch_related('images')
     serializer_class = PostSerializer
     serializer_action_classes = {
+        'create': PostCreateSerializer,
         'list': PostReadSerializer,
         'retrieve': PostReadSerializer,
         'timeline_posts': PostReadSerializer,
