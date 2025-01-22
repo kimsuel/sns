@@ -67,7 +67,7 @@ class SimpleCommentSerializer(serializers.ModelSerializer):
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
-        fields = ['id', 'image']
+        fields = ['url']
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -85,8 +85,9 @@ class PostCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['urls', 'text', 'images']
-        write_only = ['text']
+        fields = ['id', 'urls', 'text', 'images']
+        read_only_fields = ['id']
+        write_only_fields = ['text']
 
     def create(self, validated_data):
         user = self.context['request'].user
@@ -103,6 +104,7 @@ class PostCreateSerializer(serializers.ModelSerializer):
             urls.append(url)
 
         validated_data['urls'] = urls
+        validated_data['id'] = post.id
         return validated_data
 
 
@@ -119,6 +121,22 @@ class PostReadSerializer(PostSerializer):
 
     def get_likes_count(self, obj):
         return obj.likes.count()
+
+
+class PostImageUpdateSerializer(serializers.ModelSerializer):
+    urls = serializers.ListField(child=serializers.CharField(), write_only=True)
+
+    class Meta:
+        model = Post
+        fields = ['urls']
+
+    def update(self, instance, validated_data):
+        urls = validated_data.get('urls', [])
+
+        for url in urls:
+            Image.objects.create(post=instance, url=url)
+
+        return instance
 
 
 class BookmarkSerializer(serializers.ModelSerializer):

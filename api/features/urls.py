@@ -12,6 +12,7 @@ router.register('comments', CommentViewSet)
 urlpatterns = [
     path('posts/newsfeed', PostViewSet.as_view({'get': 'newsfeed_posts'})),
     path('posts/timeline', PostViewSet.as_view({'get': 'timeline_posts'})),
+    path('posts/newsfeed/images/<pk>', PostViewSet.as_view({'put': 'add_newsfeed_images'})),
     path('comments/post/<post_id>', CommentViewSet.as_view({'get': 'post_comments'})),
     path('likes', LikeViewSet.as_view({'post': 'create'})),
     path('likes/<pk>', LikeViewSet.as_view({'delete': 'destroy'})),

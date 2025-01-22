@@ -1,3 +1,4 @@
+import os
 import uuid
 
 import boto3
@@ -14,7 +15,8 @@ def get_content_type(file_name):
 
 
 def get_file_extension(file_name):
-    return mimetypes.guess_extension(file_name)
+    _, extension = os.path.splitext(file_name)
+    return extension.lower()
 
 
 def get_allowed_content_type(file_name):
@@ -36,7 +38,7 @@ def create_presigned_url(user_id, post_id, file_name):
     try:
         content_type = get_content_type(file_name)
         file_extension = get_file_extension(file_name)
-        unique_filename = f"{uuid.uuid4()}.{file_extension}"
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
 
         presigned_url = s3_client.generate_presigned_url(
             'put_object',

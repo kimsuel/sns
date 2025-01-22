@@ -16,6 +16,7 @@ from api.features.serializers import (
     FollowingSerializer,
     SimpleBookmarkSerializer,
     PostCreateSerializer,
+    PostImageUpdateSerializer,
 )
 from common.viewsets import MappingViewSetMixin
 
@@ -25,6 +26,7 @@ class PostViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
     serializer_class = PostSerializer
     serializer_action_classes = {
         'create': PostCreateSerializer,
+        'add_newsfeed_images': PostImageUpdateSerializer,
         'list': PostReadSerializer,
         'retrieve': PostReadSerializer,
         'timeline_posts': PostReadSerializer,
@@ -49,6 +51,9 @@ class PostViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
 
         queryset = self.get_queryset().filter(id__in=newsfeed_ids).order_by('-created_at')
         return self.handle_paginated_response(queryset)
+
+    def add_newsfeed_images(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
 
 
 class CommentViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
