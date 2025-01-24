@@ -37,10 +37,10 @@ class Like(TimeStampedModel):
 
 class Follow(TimeStampedModel):
     follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='follower')
-    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
+    followee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followee')
 
     class Meta:
-        unique_together = ('follower', 'following')
+        unique_together = ('follower', 'followee')
 
 
 class Bookmark(TimeStampedModel):

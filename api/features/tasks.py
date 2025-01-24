@@ -9,8 +9,8 @@ from api.features.models import Follow, Post
 def update_post_cache(*args, user_id=None, **kwargs):
     follows = Follow.objects.filter(follower=user_id)
     for follow in follows:
-        following_users = list(Follow.objects.filter(follower=follow.following).values_list('following', flat=True))
-        newsfeed_ids = list(Post.objects.filter(user__in=following_users).values_list('id', flat=True))
-        cache.set(f'newsfeeds_{follow.following.pk}', newsfeed_ids)
+        followee_users = list(Follow.objects.filter(follower=follow.followee).values_list('followee', flat=True))
+        newsfeed_ids = list(Post.objects.filter(user__in=followee_users).values_list('id', flat=True))
+        cache.set(f'newsfeeds_{follow.followee.pk}', newsfeed_ids)
 
     return True

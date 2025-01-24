@@ -33,23 +33,23 @@ class LikeSerializer(serializers.ModelSerializer):
 
 class FollowSerializer(serializers.ModelSerializer):
     follower_name = serializers.ReadOnlyField(source='follower.username')
-    following_name = serializers.ReadOnlyField(source='following.username')
+    followee_name = serializers.ReadOnlyField(source='followee.username')
 
     class Meta:
         model = Follow
-        fields = ['id', 'follower', 'follower_name', 'following', 'following_name']
+        fields = ['id', 'follower', 'follower_name', 'followee', 'followee_name']
 
 
 class FollowerSerializer(serializers.ModelSerializer):
-    user_id = serializers.ReadOnlyField(source='following.id')
-    username = serializers.ReadOnlyField(source='following.username')
+    user_id = serializers.ReadOnlyField(source='followee.id')
+    username = serializers.ReadOnlyField(source='followee.username')
 
     class Meta:
         model = Follow
         fields = ['user_id', 'username']
 
 
-class FollowingSerializer(serializers.ModelSerializer):
+class FolloweeSerializer(serializers.ModelSerializer):
     user_id = serializers.ReadOnlyField(source='follower.id')
     username = serializers.ReadOnlyField(source='follower.username')
 

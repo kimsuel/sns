@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 
-from api.features.models import Post
+from api.features.models import Post, Follow
 from api.user.models import User
 
 
@@ -9,15 +9,27 @@ class PosTestCase(APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.client = APIClient()
-        cls.user = User.objects.create_user(
+        cls.user_1 = User.objects.create_user(
             username="test",
             email="test@test.com",
             password="password"
         )
+        cls.user_2 = User.objects.create_user(
+            username="test2",
+            email="test2@test.com",
+            password="password"
+        )
         cls.url = f'/api/posts'
-        cls.post = Post.objects.create(
-            user=cls.user,
-            text='test'
+
+        for i in range(5):
+            Post.objects.create(
+                user=cls.user_2,
+                text=f'test {i+1}'
+            )
+
+        Follow.objects.create(
+            follower=cls.user_1,
+            followee=cls.user_2
         )
 
     def setUp(self):
@@ -68,3 +80,10 @@ class PosTestCase(APITestCase):
                 # 2. 필수 쿼리 매개변수 확인
                 for param in required_params:
                     self.assertIn(param, url, f"Presigned URL[{idx}]에 {param} 쿼리 매개변수가 없습니다.")
+
+    def test_get_newsfeed(self):
+        url = f'{self.url}/newsfeed'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(len(response.data.get('results')), 5)

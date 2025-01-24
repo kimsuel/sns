@@ -20,5 +20,5 @@ urlpatterns = [
     path('bookmarks/<pk>', BookmarkViewSet.as_view({'get': 'retrieve', 'delete': 'destroy'})),
     path('follows', FollowViewSet.as_view({'post': 'create'})),
     path('follows/follower/<follower_id>', FollowViewSet.as_view({'get': 'followers', 'delete': 'destroy'})),
-    path('follows/following/<following_id>', FollowViewSet.as_view({'get': 'followings', 'delete': 'destroy'})),
+    path('follows/followee/<followee_id>', FollowViewSet.as_view({'get': 'followees', 'delete': 'destroy'})),
 ] + router.urls + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

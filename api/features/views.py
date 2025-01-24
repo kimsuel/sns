@@ -13,7 +13,7 @@ from api.features.serializers import (
     PostReadSerializer,
     BookmarkReadSerializer,
     FollowerSerializer,
-    FollowingSerializer,
+    FolloweeSerializer,
     SimpleBookmarkSerializer,
     PostCreateSerializer,
     PostImageUpdateSerializer,
@@ -38,15 +38,15 @@ class PostViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
         return self.handle_paginated_response(queryset)
 
     def newsfeed_posts(self, request, *args, **kwargs):
-        following_users = cache.get(f'following_user_{self.request.user.pk}')
-        if not following_users:
-            following_users = list(Follow.objects.filter(follower=self.request.user
-                                                         ).values_list('following', flat=True))
-            cache.set(f'following_user_{self.request.user.pk}', following_users)
+        followee_users = cache.get(f'followee_user_{self.request.user.pk}')
+        if not followee_users:
+            followee_users = list(Follow.objects.filter(follower=self.request.user
+                                                        ).values_list('followee', flat=True))
+            cache.set(f'followee_user_{self.request.user.pk}', followee_users)
 
         newsfeed_ids = cache.get(f'newsfeeds_{self.request.user.pk}')
         if not newsfeed_ids:
-            newsfeed_ids = list(self.get_queryset().filter(user__in=following_users).values_list('id', flat=True))
+            newsfeed_ids = list(self.get_queryset().filter(user__in=followee_users).values_list('id', flat=True))
             cache.set(f'newsfeeds_{self.request.user.pk}', newsfeed_ids)
 
         queryset = self.get_queryset().filter(id__in=newsfeed_ids).order_by('-created_at')
@@ -75,15 +75,15 @@ class FollowViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
     serializer_class = FollowSerializer
     serializer_action_classes = {
         'followers': FollowerSerializer,
-        'followings': FollowingSerializer,
+        'followees': FolloweeSerializer,
     }
 
     def followers(self, request, *args, **kwargs):
         queryset = self.get_queryset().filter(follower=self.kwargs['follower_id'])
         return self.handle_paginated_response(queryset)
 
-    def followings(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(following=self.kwargs['following_id'])
+    def followees(self, request, *args, **kwargs):
+        queryset = self.get_queryset().filter(followee=self.kwargs['followee_id'])
         return self.handle_paginated_response(queryset)
 
 
