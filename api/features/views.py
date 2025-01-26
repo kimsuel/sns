@@ -1,7 +1,6 @@
-from django.core import serializers
 from django.core.cache import cache
-from rest_framework import viewsets, status
-from rest_framework.response import Response
+from django.db.models import Count
+from rest_framework import viewsets
 
 from api.features.models import Post, Comment, Like, Follow, Bookmark
 from api.features.serializers import (
@@ -18,6 +17,7 @@ from api.features.serializers import (
     PostCreateSerializer,
     PostImageUpdateSerializer,
 )
+from api.user.models import User
 from common.viewsets import MappingViewSetMixin
 
 
@@ -38,16 +38,22 @@ class PostViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
         return self.handle_paginated_response(queryset)
 
     def newsfeed_posts(self, request, *args, **kwargs):
-        followee_users = cache.get(f'followee_user_{self.request.user.pk}')
-        if not followee_users:
-            followee_users = list(Follow.objects.filter(follower=self.request.user
-                                                        ).values_list('followee', flat=True))
-            cache.set(f'followee_user_{self.request.user.pk}', followee_users)
+        user = self.request.user
 
-        newsfeed_ids = cache.get(f'newsfeeds_{self.request.user.pk}')
-        if not newsfeed_ids:
+        newsfeed_ids = cache.get(f'newsfeeds_{user.pk}')
+        if newsfeed_ids:
+            celeb_users = User.objects.filter(
+                followee__follower=user).annotate(
+                follower_count=Count('follower')
+            ).filter(follower_count__gte=1000).values_list('id', flat=True)
+            if celeb_users:
+                celeb_newsfeed_ids = list(self.get_queryset().filter(user__in=celeb_users).values_list('id', flat=True))
+                newsfeed_ids = list(set(newsfeed_ids + celeb_newsfeed_ids))
+                cache.set(f'newsfeeds_{user.pk}', newsfeed_ids)
+        else:
+            followee_users = Follow.objects.filter(follower=user).values_list('followee', flat=True)
             newsfeed_ids = list(self.get_queryset().filter(user__in=followee_users).values_list('id', flat=True))
-            cache.set(f'newsfeeds_{self.request.user.pk}', newsfeed_ids)
+            cache.set(f'newsfeeds_{user.pk}', newsfeed_ids)
 
         queryset = self.get_queryset().filter(id__in=newsfeed_ids).order_by('-created_at')
         return self.handle_paginated_response(queryset)
