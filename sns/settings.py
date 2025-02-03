@@ -46,10 +46,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'drf_yasg',
+    'django_filters',
+    'django_elasticsearch_dsl',
     'rest_framework',
     'rest_framework_simplejwt',
-    'corsheaders',
     'api.user',
     'api.features',
 ]
@@ -208,3 +210,12 @@ AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
 AWS_REGION_NAME = env('AWS_REGION_NAME')
 AWS_S3_BUCKET_NAME = env('AWS_S3_BUCKET_NAME')
 EXPIRATION = env('EXPIRATION')
+
+# elasticsearch
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': env('ELASTICSEARCH_HOSTS'),
+    }
+}
+
+SIGNAL_PROCESSOR = 'common.search.signal_processors.MySignalProcessor'

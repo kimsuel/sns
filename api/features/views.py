@@ -1,7 +1,11 @@
 from django.core.cache import cache
 from django.db.models import Count
+from django.http import JsonResponse
+from django_elasticsearch_dsl.search import Search
+from django_filters.rest_framework.backends import DjangoFilterBackend
 from rest_framework import viewsets
 
+from api.features.filters import PostFilter
 from api.features.models import Post, Comment, Like, Follow, Bookmark
 from api.features.serializers import (
     PostSerializer,
@@ -24,6 +28,8 @@ from common.viewsets import MappingViewSetMixin
 class PostViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
     queryset = Post.objects.prefetch_related('images')
     serializer_class = PostSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = PostFilter
     serializer_action_classes = {
         'create': PostCreateSerializer,
         'add_newsfeed_images': PostImageUpdateSerializer,
@@ -60,6 +66,13 @@ class PostViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
 
     def add_newsfeed_images(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
+
+    def search_posts(self, request, *args, **kwargs):
+        query = request.GET.get('q', '')
+        search = Search(index='posts').query('match', name=query)
+        response = search.execute()
+        results = [{'text': hit.text} for hit in response]
+        return JsonResponse(results, safe=False)
 
 
 class CommentViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
