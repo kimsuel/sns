@@ -1,8 +1,10 @@
+import json
+
 from rest_framework import serializers
 
 from api.features.models import Post, Image, Comment, Like, Follow, Bookmark
-from api.features.tasks import update_post_cache
 from common.config import create_presigned_url
+from common.kafka.producer import MessageProducer
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -96,7 +98,11 @@ class PostCreateSerializer(serializers.ModelSerializer):
         post = Post.objects.create(**validated_data)
 
         # celery 호출
-        update_post_cache.delay(user_id=user.id)
+        # update_post_cache.delay(user_id=user.id)
+
+        # kafka 호출
+        producer = MessageProducer(topic='post')
+        producer.send(json.dumps(user.id, default=str))
 
         urls = []
         for image in images:

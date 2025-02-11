@@ -219,3 +219,6 @@ ELASTICSEARCH_DSL = {
 }
 
 SIGNAL_PROCESSOR = 'common.search.signal_processors.MySignalProcessor'
+
+# kafka
+KAFKA_HOSTS = env('KAFKA_HOSTS')

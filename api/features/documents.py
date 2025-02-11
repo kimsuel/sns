@@ -1,3 +1,4 @@
+from django.forms import model_to_dict
 from django_elasticsearch_dsl import Index, Document, fields
 from django_elasticsearch_dsl.registries import registry
 
@@ -9,7 +10,7 @@ post_index = Index('posts')
 @post_index.document
 @registry.register_document
 class PostDocument(Document):
-    user = fields.TextField(attr='user')
+    user = fields.ObjectField(attr='get_user_data')
     text = fields.TextField(attr='text')
 
     class Index:
@@ -17,3 +18,6 @@ class PostDocument(Document):
 
     class Django:
         model = Post
+
+    def get_user_data(self, instance):
+        return model_to_dict(instance.user, fields=['id', 'username'])
