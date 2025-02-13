@@ -103,7 +103,10 @@ class PostCreateSerializer(serializers.ModelSerializer):
         # kafka 호출
         producer = MessageProducer()
         producer.send(topic='post', message=str(user.id))
-        producer.send(topic='es', message=post)
+        producer.send(topic='es', message={
+            "user": post.user.username,
+            "text": post.text,
+        })
 
         urls = []
         for image in images:

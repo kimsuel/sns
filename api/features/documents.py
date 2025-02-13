@@ -10,7 +10,7 @@ post_index = Index('posts')
 @post_index.document
 @registry.register_document
 class PostDocument(Document):
-    user = fields.ObjectField(attr='get_user_data')
+    user = fields.TextField(attr='user.username')
     text = fields.TextField(attr='text')
 
     class Index:
@@ -18,6 +18,3 @@ class PostDocument(Document):
 
     class Django:
         model = Post
-
-    def get_user_data(self, instance):
-        return model_to_dict(instance.user, fields=['id', 'username'])

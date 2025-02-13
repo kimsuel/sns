@@ -69,7 +69,7 @@ class PostViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
 
     def search_posts(self, request, *args, **kwargs):
         query = request.GET.get('q', '')
-        search = Search(index='posts').query('match', name=query)
+        search = Search(index='posts').query('wildcard', text={"value": f"*{query}*"})
         response = search.execute()
         results = [{'text': hit.text} for hit in response]
         return JsonResponse(results, safe=False)
