@@ -1,8 +1,7 @@
-from django.forms import model_to_dict
 from django_elasticsearch_dsl import Index, Document, fields
 from django_elasticsearch_dsl.registries import registry
 
-from api.features.models import Post
+from api.features.post.models import Post
 
 post_index = Index('posts')
 
@@ -11,6 +10,7 @@ post_index = Index('posts')
 @registry.register_document
 class PostDocument(Document):
     user = fields.TextField(attr='user.username')
+    post = fields.TextField(attr='post.id')
     text = fields.TextField(attr='text')
 
     class Index:

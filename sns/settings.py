@@ -54,6 +54,11 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'api.user',
     'api.features',
+    'api.features.bookmark',
+    'api.features.comment',
+    'api.features.follow',
+    'api.features.like',
+    'api.features.post',
 ]
 
 MIDDLEWARE = [

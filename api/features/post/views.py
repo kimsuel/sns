@@ -5,19 +5,12 @@ from django_elasticsearch_dsl.search import Search
 from django_filters.rest_framework.backends import DjangoFilterBackend
 from rest_framework import viewsets
 
-from api.features.filters import PostFilter
-from api.features.models import Post, Comment, Like, Follow, Bookmark
-from api.features.serializers import (
+from api.features.follow.models import Follow
+from api.features.post.filters import PostFilter
+from api.features.post.models import Post
+from api.features.post.serializers import (
     PostSerializer,
-    CommentSerializer,
-    LikeSerializer,
-    FollowSerializer,
-    BookmarkSerializer,
     PostReadSerializer,
-    BookmarkReadSerializer,
-    FollowerSerializer,
-    FolloweeSerializer,
-    SimpleBookmarkSerializer,
     PostCreateSerializer,
     PostImageUpdateSerializer,
 )
@@ -73,46 +66,3 @@ class PostViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
         response = search.execute()
         results = [{'text': hit.text} for hit in response]
         return JsonResponse(results, safe=False)
-
-
-class CommentViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
-
-    def post_comments(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(post=self.kwargs['post_id'])
-        return self.handle_paginated_response(queryset)
-
-
-class LikeViewSet(viewsets.ModelViewSet):
-    queryset = Like.objects.all()
-    serializer_class = LikeSerializer
-
-
-class FollowViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
-    queryset = Follow.objects.all()
-    serializer_class = FollowSerializer
-    serializer_action_classes = {
-        'followers': FollowerSerializer,
-        'followees': FolloweeSerializer,
-    }
-
-    def followers(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(follower=self.kwargs['follower_id'])
-        return self.handle_paginated_response(queryset)
-
-    def followees(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(followee=self.kwargs['followee_id'])
-        return self.handle_paginated_response(queryset)
-
-
-class BookmarkViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
-    queryset = Bookmark.objects.all()
-    serializer_class = BookmarkSerializer
-    serializer_action_classes = {
-        'list': SimpleBookmarkSerializer,
-        'retrieve': BookmarkReadSerializer,
-    }
-
-    def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)

@@ -1,6 +1,6 @@
 import django_filters
 
-from api.features.models import Post
+from api.features.post.models import Post
 
 
 class PostFilter(django_filters.FilterSet):
