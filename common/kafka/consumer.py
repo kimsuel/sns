@@ -6,7 +6,8 @@ from django.core.cache import cache
 from elasticsearch import Elasticsearch
 from kafka import KafkaConsumer
 
-from api.features.models import Follow, Post
+from api.features.post.models import Post
+from api.features.follow.models import Follow
 
 
 class MessageConsumer:
@@ -26,7 +27,7 @@ class MessageConsumer:
 
     def update_post_cache(*args, data=None, **kwargs):
         try:
-            follows = Follow.objects.filter(follower=uuid.UUID(data))
+            follows = Follow.objects.filter(follower=uuid.UUID(data.get('user_id')))
             if follows.count() < 1000:
                 for follow in follows:
                     followee_users = list(
@@ -42,17 +43,32 @@ class MessageConsumer:
         es.index(index='posts', document=data)
         print(f"Sent to Elasticsearch: {data}")
 
+    # 코드에서 요청 시
+    # def consume_messages(self):
+    #     print(f"Listening to kafka topic: {self.consumer.subscription()}")
+    #     try:
+    #         for message in self.consumer:
+    #             topic = message.topic
+    #             data = message.value
+    #             handler = self.topic_handlers.get(topic)
+    #             if handler:
+    #                 print(f"Message received: {message.value}")
+    #                 handler(data=data)
+    #                 self.consumer.commit()
+    #     except Exception as e:
+    #         print(f"Kafka Consumer Error: {e}")
+    #     finally:
+    #         self.consumer.close()
+
+    # connector로 요청 시
     def consume_messages(self):
         print(f"Listening to kafka topic: {self.consumer.subscription()}")
         try:
             for message in self.consumer:
-                topic = message.topic
-                data = message.value
-                handler = self.topic_handlers.get(topic)
-                if handler:
-                    print(f"Message received: {message.value}")
-                    handler(data=data)
-                    self.consumer.commit()
+                after_data = message.value.get('after', None)
+                if after_data:
+                    for topic, function in self.topic_handlers.items():
+                        function(after_data)
         except Exception as e:
             print(f"Kafka Consumer Error: {e}")
         finally:

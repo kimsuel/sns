@@ -59,6 +59,9 @@ INSTALLED_APPS = [
     'api.features.follow',
     'api.features.like',
     'api.features.post',
+    'api.features.event',
+    'api.features.ticket',
+    'api.features.booking',
 ]
 
 MIDDLEWARE = [

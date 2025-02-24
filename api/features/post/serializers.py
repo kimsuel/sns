@@ -42,13 +42,15 @@ class PostCreateSerializer(serializers.ModelSerializer):
         # update_post_cache.delay(user_id=user.id)
 
         # kafka 호출
-        producer = MessageProducer()
-        producer.send(topic='post', message=str(user.id))
-        producer.send(topic='es', message={
-            "user": post.user.username,
-            "post": post.id,
-            "text": post.text,
-        })
+        # producer = MessageProducer()
+        # producer.send(topic='post', message=str(user.id))
+        # producer.send(topic='es', message={
+        #     "user": post.user.username,
+        #     "post": post.id,
+        #     "text": post.text,
+        # })
+
+        # kafka connector 이용
 
         urls = []
         for image in images:
