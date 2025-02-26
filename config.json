@@ -1,0 +1,28 @@
+{
+  "name": "debezium-postgres-source",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "localhost",
+    "database.port": "5432",
+    "database.user": "root",
+    "database.password": "password",
+    "database.dbname": "sns",
+    "database.server.name": "postgres",
+    "table.include.list": "post_post",
+    "plugin.name": "pgoutput",
+    "slot.name": "debezium_slot",
+    "publication.name": "debezium_pub",
+    "topic.prefix": "post",
+    "transforms": "unwrap,routePost,routeES",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": "false",
+
+    "transforms.routePost.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.routePost.regex": "post_post",
+    "transforms.routePost.replacement": "post",
+
+    "transforms.routeES.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.routeES.regex": "post_post",
+    "transforms.routeES.replacement": "es"
+  }
+}
