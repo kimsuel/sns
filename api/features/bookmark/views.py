@@ -16,6 +16,3 @@ class BookmarkViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
         'list': SimpleBookmarkSerializer,
         'retrieve': BookmarkReadSerializer,
     }
-
-    def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)

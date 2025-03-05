@@ -13,3 +13,4 @@ elasticsearch==8.17.1
 kafka-python==2.0.2
 psycopg2-binary==2.9.10
 Pillow==11.1.0
+locust==2.33.0

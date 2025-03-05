@@ -6,7 +6,7 @@ from api.features.follow.views import FollowViewSet
 router = DefaultRouter(trailing_slash=False)
 
 urlpatterns = [
-    path('follows', FollowViewSet.as_view({'post': 'create'})),
-    path('follows/follower/<follower_id>', FollowViewSet.as_view({'get': 'followers', 'delete': 'destroy'})),
-    path('follows/followee/<followee_id>', FollowViewSet.as_view({'get': 'followees', 'delete': 'destroy'})),
-]
+    path('', FollowViewSet.as_view({'post': 'create'})),
+    path('follower/<follower_id>', FollowViewSet.as_view({'get': 'followers', 'delete': 'destroy'})),
+    path('followee/<followee_id>', FollowViewSet.as_view({'get': 'followees', 'delete': 'destroy'})),
+] + router.urls

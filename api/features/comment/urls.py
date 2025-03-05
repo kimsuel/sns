@@ -4,8 +4,8 @@ from rest_framework.routers import DefaultRouter
 from api.features.comment.views import CommentViewSet
 
 router = DefaultRouter(trailing_slash=False)
-router.register('comments', CommentViewSet)
+router.register('', CommentViewSet)
 
 urlpatterns = [
-    path('comments/post/<post_id>', CommentViewSet.as_view({'get': 'post_comments'})),
-]
+    path('post/<post_id>', CommentViewSet.as_view({'get': 'post_comments'})),
+] + router.urls
