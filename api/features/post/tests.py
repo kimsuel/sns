@@ -1,7 +1,8 @@
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 
-from api.features.models import Post, Follow
+from api.features.follow.models import Follow
+from api.features.post.models import Post
 from api.user.models import User
 
 

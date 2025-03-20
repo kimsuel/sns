@@ -1,5 +1,5 @@
 {
-  "name": "debezium-postgres-source",
+  "name": "debezium-postgres-source-post",
   "config": {
     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
     "database.hostname": "host.docker.internal",
@@ -15,22 +15,14 @@
     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
     "value.converter.schemas.enable": "false",
     "plugin.name": "pgoutput",
-    "slot.name": "debezium_slot",
-    "publication.name": "debezium_pub",
-
-    "topic.prefix": "post",
-
-    "transforms": "unwrap,routePost,routeES",
-
+    "slot.name": "debezium_slot_post",
+    "publication.name": "debezium_pub_post",
+    "topic.prefix": "sns",
+    "transforms": "unwrap,route",
     "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
     "transforms.unwrap.drop.tombstones": "false",
-
-    "transforms.routePost.type": "org.apache.kafka.connect.transforms.RegexRouter",
-    "transforms.routePost.regex": "post_post",
-    "transforms.routePost.replacement": "post",
-
-    "transforms.routeES.type": "org.apache.kafka.connect.transforms.RegexRouter",
-    "transforms.routeES.regex": "post_post",
-    "transforms.routeES.replacement": "es"
+    "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.route.regex": "sns.public.post_post",
+    "transforms.route.replacement": "post"
   }
 }

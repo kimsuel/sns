@@ -1,70 +1,86 @@
-import requests
+import os
+import django
 
-host = "http://localhost:8002"
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "sns.settings")
+django.setup()
+
+from django.contrib.auth.hashers import make_password
+
+from api.features.follow.models import Follow
+from api.features.post.models import Post
+from api.user.models import User
 
 
 class MockData:
     def __init__(self):
-        # self.sign_up()
-        self.follow()
+        self.create_user()
+        self.create_follow()
+        self.create_newsfeeds()
 
     @staticmethod
-    def sign_up():
-        for i in range(6418, 10001):
-            url = f'{host}/api/user/signup'
-            data = {
-                'username': f'user_{i}',
-                'email': f'user_{i}@test.com',
-                'password': 'password'
-            }
-
-            response = requests.post(url, json=data)
-
-            if response.status_code == 201:
-                print(f"데이터 : {data}")
-            else:
-                print(f"응답 오류 : {response.status_code}")
+    def create_user():
+        users = [
+            User(username=f"user_{i}",
+                 email=f"user_{i}@example.com",
+                 password=make_password("password"))
+            for i in range(1, 10001)
+        ]
+        User.objects.bulk_create(users)
 
     @staticmethod
-    def get_token(username: str):
-        url = f'{host}/api/user/login'
-        response = requests.post(url,
-                                 json={"username": username,
-                                       "password": "password"})
-        if response.status_code == 200:
-            return response.json().get("token").get("access")
-        else:
-            print("로그인 실패:", response.text)
+    def create_follow():
+        users_exclude_user_1 = User.objects.exclude(username="user_1")
+        users_exclude_user_2 = User.objects.exclude(username="user_2")
+        users_exclude_user_3 = User.objects.exclude(username="user_3")
+        user_1 = User.objects.get(username="user_1")
+        user_2 = User.objects.get(username="user_2")
+        user_3 = User.objects.get(username="user_3")
 
-    def follow(self):
-        follower_token = self.get_token('user_1')
-        url = f'{host}/api/follows/'
-        for i in range(2, 10001):
-            data_follower = {
-                'follower_name': 'user_1',
-                'followee_name': f'user_{i}',
-            }
-            response = requests.post(url, json=data_follower,
-                                     headers={'Authorization': f'Bearer {follower_token}'})
+        for user in users_exclude_user_1:
+            instance, created = Follow.objects.get_or_create(follower=user_1,
+                                                             followee=user)
+            if created:
+                print(f"follower 데이터 : {instance}")
 
-            if response.status_code == 201:
-                print(f"follower 데이터 : {data_follower}")
-            else:
-                print(f"follower 응답 오류 : {response.status_code}")
+        for user in users_exclude_user_2:
+            instance, created = Follow.objects.get_or_create(follower=user,
+                                                             followee=user_2)
+            if created:
+                print(f"followee 데이터 : {instance}")
 
-            data_followee = {
-                'follower_name': f'user_{i + 1}',
-                'followee_name': f'user_2',
-            }
-            followee_token = self.get_token(f'user_{i + 1}')
+        count = 0
+        for user in users_exclude_user_3:
+            if count > 500:
+                break
 
-            response = requests.post(url, json=data_followee,
-                                     headers={'Authorization': f'Bearer {followee_token}'})
+            instance, created = Follow.objects.get_or_create(follower=user_3,
+                                                             followee=user)
+            if created:
+                print(f"follower 데이터 : {instance}")
+                count += 1
 
-            if response.status_code == 201:
-                print(f"followee 데이터 : {data_followee}")
-            else:
-                print(f"followee 응답 오류 : {response.status_code}")
+        count = 0
+        for user in users_exclude_user_3:
+            if count > 500:
+                break
+
+            instance, created = Follow.objects.get_or_create(follower=user,
+                                                             followee=user_3)
+
+            if created:
+                print(f"followee 데이터 : {instance}")
+                count += 1
+
+    @staticmethod
+    def create_newsfeeds():
+        users = User.objects.all()
+        for user in users:
+            for i in range(20):
+                instance = Post.objects.create(user=user, text=f'테스트용 글 작성_{i}')
+                for i in range(3):
+                    instance.images.create(post=instance,
+                                           url=f'https://flab-sns-bucket.s3.amazonaws.com/test_url/image_{i + 1}.jpg')
+                print(f'user: {user.username}, post 생성 : {instance}')
 
 
 MockData()

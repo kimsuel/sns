@@ -17,7 +17,7 @@ class MessageConsumer:
             bootstrap_servers=settings.KAFKA_HOSTS,
             group_id=settings.KAFKA_GROUP_ID,
             auto_offset_reset='latest',
-            enable_auto_commit=False,
+            enable_auto_commit=True,
             value_deserializer=lambda m: json.loads(m.decode('utf-8'))
         )
         self.topic_handlers = {
@@ -25,8 +25,9 @@ class MessageConsumer:
             "post": self.update_post_cache
         }
 
-    def update_post_cache(*args, data=None, **kwargs):
+    def update_post_cache(self, data=None, *args, **kwargs):
         try:
+            print('update post cache')
             follows = Follow.objects.filter(follower=uuid.UUID(data.get('user_id')))
             if follows.count() < 1000:
                 for follow in follows:
@@ -65,10 +66,13 @@ class MessageConsumer:
         print(f"Listening to kafka topic: {self.consumer.subscription()}")
         try:
             for message in self.consumer:
-                after_data = message.value.get('after', None)
-                if after_data:
-                    for topic, function in self.topic_handlers.items():
-                        function(after_data)
+                topic = message.topic
+                data = message.value
+                print(f'topic: {topic}, data: {data}')
+                handler = self.topic_handlers.get(topic)
+                if handler:
+                    handler(data=data)
+                    self.consumer.commit()
         except Exception as e:
             print(f"Kafka Consumer Error: {e}")
         finally:
