@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from api.features.event.models import Event
+from api.features.ticket.serializers import TicketSerializer
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -11,8 +12,12 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class EventReadSerializer(serializers.ModelSerializer):
-    tickets = TicketSerializer(many=True, read_only=True)
+    tickets = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
         fields = '__all__'
+
+    def get_tickets(self, obj):
+        tickets = obj.tickets.filter(status='available')
+        return TicketSerializer(tickets, many=True).data

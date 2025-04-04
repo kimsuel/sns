@@ -38,7 +38,7 @@ class LocustUser(HttpUser):
         response = self.client.post("/api/posts/", headers=headers, json=data)
         if response.status_code == 200:
             result = response.json()
-            print(f"정상 응답: {result}")
+            # print(f"정상 응답: {result}")
             post_id = result.get("id")
             data = {
                 "urls": [

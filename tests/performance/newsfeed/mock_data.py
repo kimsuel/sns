@@ -77,10 +77,9 @@ class MockData:
         for user in users:
             for i in range(20):
                 instance = Post.objects.create(user=user, text=f'테스트용 글 작성_{i}')
-                for i in range(3):
+                for j in range(3):
                     instance.images.create(post=instance,
-                                           url=f'https://flab-sns-bucket.s3.amazonaws.com/test_url/image_{i + 1}.jpg')
+                                           url=f'https://flab-sns-bucket.s3.amazonaws.com/test_url/image_{j + 1}.jpg')
                 print(f'user: {user.username}, post 생성 : {instance}')
-
 
 MockData()

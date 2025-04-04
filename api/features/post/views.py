@@ -20,6 +20,7 @@ from common.viewsets import MappingViewSetMixin
 
 class PostViewSet(MappingViewSetMixin, viewsets.ModelViewSet):
     queryset = Post.objects.prefetch_related('images')
+    # queryset = Post.objects.all()
     serializer_class = PostSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = PostFilter
